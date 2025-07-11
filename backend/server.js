@@ -29,6 +29,8 @@ async function startServer() {
     await initializeCanvas();
   } catch (error) {
     console.error('MongoDB connection error:', error);
+    console.error('Please ensure MongoDB is running and accessible at:', MONGODB_URI);
+    console.error('You can start MongoDB with: mongod');
     process.exit(1);
   }
 
