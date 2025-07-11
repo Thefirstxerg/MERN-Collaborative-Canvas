@@ -1,0 +1,20 @@
+{
+  "name": "rdraw-collaborative-canvas",
+  "version": "1.0.0",
+  "description": "A real-time collaborative pixel art application",
+  "main": "index.js",
+  "scripts": {
+    "install": "npm install --prefix backend && npm install --prefix frontend",
+    "start": "npm run start:backend & npm run start:frontend",
+    "start:backend": "cd backend && npm start",
+    "start:frontend": "cd frontend && npm start",
+    "dev": "npm run dev:backend & npm run dev:frontend",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm start",
+    "build": "npm run build:frontend",
+    "build:frontend": "cd frontend && npm run build"
+  },
+  "keywords": ["mern", "graphql", "websocket", "pixel-art", "collaborative"],
+  "author": "",
+  "license": "MIT"
+}
