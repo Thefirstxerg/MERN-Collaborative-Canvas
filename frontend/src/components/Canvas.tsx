@@ -78,8 +78,8 @@ const Canvas: React.FC = () => {
         const maxHeight = Math.min(rect.height - 40, window.innerHeight - 140); // Account for header
         
         setCanvasSize({
-          width: Math.min(maxWidth, 800),
-          height: Math.min(maxHeight, 600)
+          width: Math.max(maxWidth, 400), // Use most of available width, minimum 400px
+          height: Math.max(maxHeight, 300) // Use most of available height, minimum 300px
         });
       }
     };
