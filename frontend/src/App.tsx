@@ -29,13 +29,22 @@ const client = new ApolloClient({
 });
 
 function AppContent() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   
   return (
     <div className="App">
       <header className="App-header">
-        <h1>rDraw - Collaborative Pixel Art</h1>
-        {user && <p>Welcome, {user.username}!</p>}
+        <h1>rDraw - Collaborative Canvas</h1>
+        <div className="header-content">
+          {user && (
+            <div className="user-info">
+              <span>Welcome, {user.username}!</span>
+              <button onClick={logout} className="logout-btn">
+                Logout
+              </button>
+            </div>
+          )}
+        </div>
       </header>
       <main>
         {user ? <Canvas /> : <Auth />}

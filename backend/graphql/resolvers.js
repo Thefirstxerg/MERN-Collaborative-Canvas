@@ -90,7 +90,7 @@ const resolvers = {
         const now = new Date();
         if (user.lastPixelPlacementTimestamp) {
           const timeSinceLastPlacement = now - user.lastPixelPlacementTimestamp;
-          const cooldownMs = 30 * 1000; // 30 seconds
+          const cooldownMs = 10 * 1000; // 10 seconds
 
           if (timeSinceLastPlacement < cooldownMs) {
             const remainingTime = Math.ceil((cooldownMs - timeSinceLastPlacement) / 1000);
