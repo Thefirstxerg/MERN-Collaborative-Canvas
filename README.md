@@ -5,7 +5,7 @@ A real-time collaborative pixel art application built with the MERN stack, featu
 ## Features
 
 - **Real-time Collaboration**: Multiple users can paint on the same 150x150 canvas simultaneously
-- **Pixel-perfect Experience**: Each user can place one pixel every 30 seconds
+- **Pixel-perfect Experience**: Each user can place one pixel every 10 seconds
 - **JWT Authentication**: Secure user registration and login system
 - **5-bit Color Palette**: 32 beautiful colors to choose from
 - **GraphQL API**: Single endpoint for all data operations
@@ -24,10 +24,35 @@ A real-time collaborative pixel art application built with the MERN stack, featu
 - **bcryptjs** - Password hashing
 
 ### Frontend
-- **React** - UI library with TypeScript
+- **React** - UI library with JavaScript/JSX
 - **Apollo Client** - GraphQL client
 - **HTML5 Canvas** - Pixel art rendering
 - **WebSocket** - Real-time updates
+
+## Deployment
+
+### Production URLs
+- **Backend**: https://mern-collaborative-canvas.onrender.com
+- **Frontend**: Deploy to Netlify (configured with `netlify.toml`)
+
+### Backend Deployment (Render)
+1. Connect your repository to Render
+2. Set up environment variables:
+   ```env
+   PORT=4000
+   MONGODB_URI=your-mongodb-connection-string
+   JWT_SECRET=your-jwt-secret-key
+   NODE_ENV=production
+   ```
+3. Deploy using the start command: `npm start`
+
+### Frontend Deployment (Netlify)
+1. Connect your repository to Netlify
+2. Set build settings:
+   - Base directory: `frontend`
+   - Build command: `npm run build`
+   - Publish directory: `build`
+3. The included `netlify.toml` handles SPA routing
 
 ## Architecture
 
@@ -36,9 +61,9 @@ The application follows a clean separation between initial data loading and real
 1. **Initial Load**: Client fetches complete canvas state via GraphQL
 2. **Authentication**: JWT-based user registration and login
 3. **Real-time Updates**: WebSocket connection for instant pixel updates
-4. **Pixel Placement**: GraphQL mutations with 30-second cooldown enforcement
+4. **Pixel Placement**: GraphQL mutations with 10-second cooldown enforcement
 
-## Installation
+## Local Development
 
 ### Prerequisites
 - Node.js (v14 or higher)
@@ -86,7 +111,9 @@ The application follows a clean separation between initial data loading and real
 
 ### GraphQL Endpoints
 
-**Base URL**: `http://localhost:4000/graphql`
+**Base URL**: 
+- Local: `http://localhost:4000/graphql`
+- Production: `https://mern-collaborative-canvas.onrender.com/graphql`
 
 #### Queries
 
@@ -149,7 +176,9 @@ mutation PlacePixel($x: Int!, $y: Int!, $color: Int!) {
 
 ### WebSocket Events
 
-**WebSocket URL**: `ws://localhost:4000/ws`
+**WebSocket URL**: 
+- Local: `ws://localhost:4000/ws`
+- Production: `wss://mern-collaborative-canvas.onrender.com/ws`
 
 #### Client to Server
 

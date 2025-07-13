@@ -1,10 +1,6 @@
 import React from 'react';
 
-interface LoadingProps {
-  message?: string;
-}
-
-const Loading: React.FC<LoadingProps> = ({ message = 'Loading...' }) => {
+const Loading = ({ message = 'Loading...' }) => {
   return (
     <div className="loading-container">
       <div className="loading-spinner"></div>

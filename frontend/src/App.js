@@ -8,7 +8,7 @@ import './App.css';
 
 // Create HTTP link
 const httpLink = createHttpLink({
-  uri: 'http://localhost:4000/graphql',
+  uri: 'https://mern-collaborative-canvas.onrender.com/graphql',
 });
 
 // Create auth link

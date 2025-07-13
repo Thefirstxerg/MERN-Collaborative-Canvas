@@ -90,7 +90,11 @@ async function startServer() {
   });
 
   // Setup middleware
-  app.use(cors());
+  app.use(cors({
+    origin: process.env.NODE_ENV === 'production' 
+      ? ['https://mern-collaborative-canvas.netlify.app', 'https://your-frontend-domain.netlify.app']
+      : ['http://localhost:3000', 'http://localhost:3001']
+  }));
   app.use(express.json());
 
   // Apply GraphQL middleware
