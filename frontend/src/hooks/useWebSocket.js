@@ -1,15 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 
-interface UseWebSocketResult {
-  sendMessage: (message: string) => void;
-  lastMessage: string | null;
-  isConnected: boolean;
-}
-
-export const useWebSocket = (url: string, token: string | null): UseWebSocketResult => {
-  const [lastMessage, setLastMessage] = useState<string | null>(null);
+export const useWebSocket = (url, token) => {
+  const [lastMessage, setLastMessage] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
-  const wsRef = useRef<WebSocket | null>(null);
+  const wsRef = useRef(null);
 
   useEffect(() => {
     if (!token) return;
@@ -64,7 +58,7 @@ export const useWebSocket = (url: string, token: string | null): UseWebSocketRes
     };
   }, [url, token]);
 
-  const sendMessage = (message: string) => {
+  const sendMessage = (message) => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(message);
     }

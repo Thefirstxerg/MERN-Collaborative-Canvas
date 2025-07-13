@@ -38,13 +38,13 @@ const COLOR_PALETTE = [
   '#51E9F4', '#493AC1', '#6A5CFF', '#94B3FF'  // Light blues/purples
 ];
 
-const Canvas: React.FC = () => {
+const Canvas = () => {
   const { token, user, updateUser } = useAuth();
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef(null);
+  const containerRef = useRef(null);
   const [selectedColor, setSelectedColor] = useState(0);
-  const [pixelGrid, setPixelGrid] = useState<number[][]>([]);
-  const [status, setStatus] = useState<{ type: 'success' | 'error' | 'cooldown'; message: string } | null>(null);
+  const [pixelGrid, setPixelGrid] = useState([]);
+  const [status, setStatus] = useState(null);
   const [cooldownRemaining, setCooldownRemaining] = useState(0);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -57,7 +57,7 @@ const Canvas: React.FC = () => {
 
   // WebSocket connection
   const { lastMessage, isConnected } = useWebSocket(
-    'ws://localhost:4000/ws',
+    'wss://mern-collaborative-canvas.onrender.com/ws',
     token
   );
 
@@ -100,7 +100,7 @@ const Canvas: React.FC = () => {
     if (user?.lastPixelPlacementTimestamp) {
       const updateCooldown = () => {
         const now = Date.now();
-        const lastPlacement = new Date(user.lastPixelPlacementTimestamp!).getTime();
+        const lastPlacement = new Date(user.lastPixelPlacementTimestamp).getTime();
         const cooldownMs = 10 * 1000; // 10 seconds
         const elapsed = now - lastPlacement;
         const remaining = Math.max(0, cooldownMs - elapsed);
@@ -170,7 +170,7 @@ const Canvas: React.FC = () => {
     }
   }, [pixelGrid, zoom, pan, canvasSize]);
 
-  const handleCanvasClick = async (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const handleCanvasClick = async (e) => {
     if (!canvasRef.current || cooldownRemaining > 0) return;
 
     const rect = canvasRef.current.getBoundingClientRect();
@@ -197,20 +197,20 @@ const Canvas: React.FC = () => {
       
       setStatus({ type: 'success', message: 'Pixel placed successfully!' });
       setTimeout(() => setStatus(null), 3000);
-    } catch (err: any) {
+    } catch (err) {
       setStatus({ type: 'error', message: err.message || 'Failed to place pixel' });
       setTimeout(() => setStatus(null), 5000);
     }
   };
 
-  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const handleMouseDown = (e) => {
     if (e.button === 0) { // Left click
       setIsDragging(true);
       setLastMousePos({ x: e.clientX, y: e.clientY });
     }
   };
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const handleMouseMove = (e) => {
     if (isDragging) {
       const deltaX = e.clientX - lastMousePos.x;
       const deltaY = e.clientY - lastMousePos.y;
@@ -228,7 +228,7 @@ const Canvas: React.FC = () => {
     setIsDragging(false);
   };
 
-  const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
+  const handleWheel = (e) => {
     e.preventDefault();
     e.stopPropagation();
     

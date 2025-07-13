@@ -28,7 +28,7 @@ const LOGIN_USER = gql`
   }
 `;
 
-const Auth: React.FC = () => {
+const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -65,7 +65,7 @@ const Auth: React.FC = () => {
 
       const result = data[isLogin ? 'loginUser' : 'registerUser'];
       login(result.token, result.user);
-    } catch (err: any) {
+    } catch (err) {
       setError(err.message || 'An error occurred');
     }
   };
