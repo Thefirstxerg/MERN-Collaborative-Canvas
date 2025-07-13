@@ -39,7 +39,7 @@ const COLOR_PALETTE = [
 ];
 
 const Canvas: React.FC = () => {
-  const { token, user } = useAuth();
+  const { token, user, updateUser } = useAuth();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [selectedColor, setSelectedColor] = useState(0);
@@ -74,12 +74,18 @@ const Canvas: React.FC = () => {
       if (containerRef.current) {
         const container = containerRef.current;
         const rect = container.getBoundingClientRect();
-        const maxWidth = Math.min(rect.width - 40, window.innerWidth - 360); // Account for sidebar
-        const maxHeight = Math.min(rect.height - 40, window.innerHeight - 140); // Account for header
+        
+        // Calculate available space (account for sidebar and padding)
+        const availableWidth = rect.width - 40; // Account for padding
+        const availableHeight = rect.height - 40; // Account for padding
+        
+        // Make canvas take up most of the available space
+        const canvasWidth = Math.min(availableWidth, availableHeight);
+        const canvasHeight = canvasWidth; // Square canvas
         
         setCanvasSize({
-          width: Math.min(maxWidth, 800),
-          height: Math.min(maxHeight, 600)
+          width: Math.max(canvasWidth, 400), // Minimum size
+          height: Math.max(canvasHeight, 400)
         });
       }
     };
@@ -148,7 +154,10 @@ const Canvas: React.FC = () => {
       // Calculate pixel size based on canvas size
       const pixelSize = Math.min(canvasSize.width / 150, canvasSize.height / 150);
 
-      // Draw pixels
+      // Disable image smoothing for crisp pixels
+      ctx.imageSmoothingEnabled = false;
+
+      // Draw pixels without borders
       for (let y = 0; y < 150; y++) {
         for (let x = 0; x < 150; x++) {
           const colorIndex = pixelGrid[y][x];
@@ -179,6 +188,11 @@ const Canvas: React.FC = () => {
     try {
       await placePixel({
         variables: { x, y, color: selectedColor },
+      });
+      
+      // Update user's last pixel placement timestamp
+      updateUser({
+        lastPixelPlacementTimestamp: new Date().toISOString()
       });
       
       setStatus({ type: 'success', message: 'Pixel placed successfully!' });
@@ -216,8 +230,10 @@ const Canvas: React.FC = () => {
 
   const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
     e.preventDefault();
+    e.stopPropagation();
+    
     const delta = e.deltaY > 0 ? 0.9 : 1.1;
-    setZoom(prev => Math.min(Math.max(prev * delta, 0.5), 3));
+    setZoom(prev => Math.min(Math.max(prev * delta, 0.1), 5));
   };
 
   const resetView = () => {
@@ -291,6 +307,10 @@ const Canvas: React.FC = () => {
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onWheel={handleWheel}
+          style={{
+            touchAction: 'none',
+            userSelect: 'none'
+          }}
         />
         
         {(status || placingPixel) && (
