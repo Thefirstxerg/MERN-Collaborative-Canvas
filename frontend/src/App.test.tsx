@@ -4,6 +4,6 @@ import App from './App';
 
 test('renders canvas application', () => {
   render(<App />);
-  const linkElement = screen.getByText(/rDraw - Collaborative Pixel Art/i);
+  const linkElement = screen.getByText(/rDraw - Collaborative Canvas/i);
   expect(linkElement).toBeInTheDocument();
 });

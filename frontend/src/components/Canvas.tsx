@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, gql } from '@apollo/client';
 import { useAuth } from '../contexts/AuthContext';
 import { useWebSocket } from '../hooks/useWebSocket';
+import Loading from './Loading';
 
 const GET_CANVAS_STATE = gql`
   query GetCanvasState {
@@ -38,15 +39,21 @@ const COLOR_PALETTE = [
 ];
 
 const Canvas: React.FC = () => {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [selectedColor, setSelectedColor] = useState(0);
   const [pixelGrid, setPixelGrid] = useState<number[][]>([]);
   const [status, setStatus] = useState<{ type: 'success' | 'error' | 'cooldown'; message: string } | null>(null);
-  const [scale] = useState(3); // 3x scale for better visibility
+  const [cooldownRemaining, setCooldownRemaining] = useState(0);
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [lastMousePos, setLastMousePos] = useState({ x: 0, y: 0 });
+  const [canvasSize, setCanvasSize] = useState({ width: 1000, height: 1000 });
 
   const { data: canvasData, loading, error } = useQuery(GET_CANVAS_STATE);
-  const [placePixel] = useMutation(PLACE_PIXEL);
+  const [placePixel, { loading: placingPixel }] = useMutation(PLACE_PIXEL);
 
   // WebSocket connection
   const { lastMessage, isConnected } = useWebSocket(
@@ -60,6 +67,48 @@ const Canvas: React.FC = () => {
       setPixelGrid(canvasData.getCanvasState.pixels);
     }
   }, [canvasData]);
+
+  // Set up canvas size based on window size
+  useEffect(() => {
+    const updateCanvasSize = () => {
+      if (containerRef.current) {
+        const container = containerRef.current;
+        const rect = container.getBoundingClientRect();
+        const maxWidth = Math.min(rect.width - 40, window.innerWidth - 360); // Account for sidebar
+        const maxHeight = Math.min(rect.height - 40, window.innerHeight - 140); // Account for header
+        
+        setCanvasSize({
+          width: Math.min(maxWidth, 800),
+          height: Math.min(maxHeight, 600)
+        });
+      }
+    };
+
+    updateCanvasSize();
+    window.addEventListener('resize', updateCanvasSize);
+    return () => window.removeEventListener('resize', updateCanvasSize);
+  }, []);
+
+  // Cooldown timer
+  useEffect(() => {
+    if (user?.lastPixelPlacementTimestamp) {
+      const updateCooldown = () => {
+        const now = Date.now();
+        const lastPlacement = new Date(user.lastPixelPlacementTimestamp!).getTime();
+        const cooldownMs = 10 * 1000; // 10 seconds
+        const elapsed = now - lastPlacement;
+        const remaining = Math.max(0, cooldownMs - elapsed);
+        
+        setCooldownRemaining(Math.ceil(remaining / 1000));
+        
+        if (remaining > 0) {
+          setTimeout(updateCooldown, 1000);
+        }
+      };
+      
+      updateCooldown();
+    }
+  }, [user?.lastPixelPlacementTimestamp, pixelGrid]); // Update when a new pixel is placed
 
   // Handle WebSocket messages
   useEffect(() => {
@@ -91,23 +140,39 @@ const Canvas: React.FC = () => {
       // Clear canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      // Apply zoom and pan transformations
+      ctx.save();
+      ctx.translate(pan.x, pan.y);
+      ctx.scale(zoom, zoom);
+
+      // Calculate pixel size based on canvas size
+      const pixelSize = Math.min(canvasSize.width / 150, canvasSize.height / 150);
+
       // Draw pixels
       for (let y = 0; y < 150; y++) {
         for (let x = 0; x < 150; x++) {
           const colorIndex = pixelGrid[y][x];
           ctx.fillStyle = COLOR_PALETTE[colorIndex];
-          ctx.fillRect(x * scale, y * scale, scale, scale);
+          ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
         }
       }
+
+      ctx.restore();
     }
-  }, [pixelGrid, scale]);
+  }, [pixelGrid, zoom, pan, canvasSize]);
 
   const handleCanvasClick = async (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!canvasRef.current) return;
+    if (!canvasRef.current || cooldownRemaining > 0) return;
 
     const rect = canvasRef.current.getBoundingClientRect();
-    const x = Math.floor((e.clientX - rect.left) / scale);
-    const y = Math.floor((e.clientY - rect.top) / scale);
+    const pixelSize = Math.min(canvasSize.width / 150, canvasSize.height / 150);
+    
+    // Calculate click position considering zoom and pan
+    const mouseX = (e.clientX - rect.left - pan.x) / zoom;
+    const mouseY = (e.clientY - rect.top - pan.y) / zoom;
+    
+    const x = Math.floor(mouseX / pixelSize);
+    const y = Math.floor(mouseY / pixelSize);
 
     if (x < 0 || x >= 150 || y < 0 || y >= 150) return;
 
@@ -124,14 +189,51 @@ const Canvas: React.FC = () => {
     }
   };
 
-  if (loading) return <div>Loading canvas...</div>;
-  if (error) return <div>Error loading canvas: {error.message}</div>;
-  if (!pixelGrid.length) return <div>No canvas data</div>;
+  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (e.button === 0) { // Left click
+      setIsDragging(true);
+      setLastMousePos({ x: e.clientX, y: e.clientY });
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (isDragging) {
+      const deltaX = e.clientX - lastMousePos.x;
+      const deltaY = e.clientY - lastMousePos.y;
+      
+      setPan(prev => ({
+        x: prev.x + deltaX,
+        y: prev.y + deltaY
+      }));
+      
+      setLastMousePos({ x: e.clientX, y: e.clientY });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    setZoom(prev => Math.min(Math.max(prev * delta, 0.5), 3));
+  };
+
+  const resetView = () => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  };
+
+  if (loading) return <Loading message="Loading canvas..." />;
+  if (error) return <div className="error">Error loading canvas: {error.message}</div>;
+  if (!pixelGrid.length) return <Loading message="Initializing canvas..." />;
 
   return (
     <div className="canvas-container">
-      <div className="canvas-controls">
+      <div className="canvas-sidebar">
         <div className="color-palette">
+          <h3>Color Palette</h3>
           {COLOR_PALETTE.map((color, index) => (
             <div
               key={index}
@@ -142,42 +244,60 @@ const Canvas: React.FC = () => {
             />
           ))}
         </div>
-        <div>
-          <strong>Selected Color:</strong> {selectedColor} 
-          <span 
-            style={{ 
-              display: 'inline-block', 
-              width: '20px', 
-              height: '20px', 
-              backgroundColor: COLOR_PALETTE[selectedColor],
-              border: '1px solid #000',
-              marginLeft: '10px',
-              verticalAlign: 'middle'
-            }}
-          />
+        
+        <div className="canvas-info">
+          <h3>Instructions</h3>
+          <p>• Click to place a pixel</p>
+          <p>• Drag to pan the canvas</p>
+          <p>• Scroll to zoom in/out</p>
+          <p>• 10 second cooldown between pixels</p>
         </div>
-        <div>
-          <strong>WebSocket:</strong> {isConnected ? '✅ Connected' : '❌ Disconnected'}
+        
+        <div className="canvas-controls">
+          <div className="selected-color-info">
+            <span>Selected Color: {selectedColor}</span>
+            <div 
+              className="selected-color-preview"
+              style={{ backgroundColor: COLOR_PALETTE[selectedColor] }}
+            />
+          </div>
+          
+          <div className="websocket-status">
+            <span>WebSocket: {isConnected ? '✅ Connected' : '❌ Disconnected'}</span>
+          </div>
+          
+          <div className={`cooldown-timer ${cooldownRemaining > 0 ? 'active' : 'ready'}`}>
+            {cooldownRemaining > 0 ? (
+              <span>Cooldown: {cooldownRemaining}s</span>
+            ) : (
+              <span>Ready to place pixel!</span>
+            )}
+          </div>
+          
+          <button onClick={resetView} className="reset-view-btn">
+            Reset View
+          </button>
         </div>
       </div>
       
-      <canvas
-        ref={canvasRef}
-        width={150 * scale}
-        height={150 * scale}
-        className="canvas-board"
-        onClick={handleCanvasClick}
-      />
-      
-      {status && (
-        <div className={`status ${status.type}`}>
-          {status.message}
-        </div>
-      )}
-      
-      <div className="canvas-info">
-        <p>Click on the canvas to place a pixel with the selected color.</p>
-        <p>You can place one pixel every 30 seconds.</p>
+      <div className="canvas-main" ref={containerRef}>
+        <canvas
+          ref={canvasRef}
+          width={canvasSize.width}
+          height={canvasSize.height}
+          className="canvas-board"
+          onClick={handleCanvasClick}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onWheel={handleWheel}
+        />
+        
+        {(status || placingPixel) && (
+          <div className={`status ${status?.type || 'success'}`}>
+            {placingPixel ? 'Placing pixel...' : status?.message}
+          </div>
+        )}
       </div>
     </div>
   );
