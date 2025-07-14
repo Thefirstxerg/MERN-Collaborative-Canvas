@@ -379,7 +379,7 @@ main {
 /* Leaderboard styles */
 .leaderboard {
   position: absolute;
-  top: 20px;
+  top: 80px;
   right: 20px;
   width: 300px;
   background-color: rgba(45, 45, 45, 0.9);
