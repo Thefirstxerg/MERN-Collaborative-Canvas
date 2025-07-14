@@ -5,9 +5,11 @@ A real-time collaborative pixel art application built with the MERN stack, featu
 ## Features
 
 - **Real-time Collaboration**: Multiple users can paint on the same 150x150 canvas simultaneously
-- **Pixel-perfect Experience**: Each user can place one pixel every 10 seconds
+- **Pixel-perfect Experience**: Each user can place one pixel every 10 seconds (admins have no cooldown)
 - **JWT Authentication**: Secure user registration and login system
-- **5-bit Color Palette**: 32 beautiful colors to choose from
+- **40-Color Palette**: Extended color palette with 40 vibrant colors to choose from
+- **Color Persistence**: Last selected color is saved across browser sessions
+- **Admin System**: Admin users can place pixels without cooldown restrictions
 - **GraphQL API**: Single endpoint for all data operations
 - **WebSocket Communication**: Instant updates across all connected clients
 - **Chunk-based Storage**: Efficient MongoDB storage using 9 chunks of 50x50 pixels each
@@ -89,7 +91,10 @@ The application follows a clean separation between initial data loading and real
    PORT=4000
    MONGODB_URI=mongodb://localhost:27017/rdraw
    JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+   ADMIN_USERNAME=admin
    ```
+   
+   Note: Setting `ADMIN_USERNAME` will make any user registered with that username an admin (no cooldown for pixel placement).
 
 4. **Start MongoDB**
    ```bash
@@ -133,6 +138,8 @@ query Me {
     id
     username
     lastPixelPlacementTimestamp
+    pixelCount
+    isAdmin
   }
 }
 ```
@@ -148,6 +155,8 @@ mutation RegisterUser($username: String!, $password: String!) {
       id
       username
       lastPixelPlacementTimestamp
+      pixelCount
+      isAdmin
     }
   }
 }
@@ -160,6 +169,8 @@ mutation LoginUser($username: String!, $password: String!) {
       id
       username
       lastPixelPlacementTimestamp
+      pixelCount
+      isAdmin
     }
   }
 }
@@ -211,6 +222,8 @@ mutation PlacePixel($x: Int!, $y: Int!, $color: Int!) {
   "username": String,           // Unique username
   "password": String,           // Hashed password
   "lastPixelPlacementTimestamp": Date,
+  "pixelCount": Number,         // Total pixels placed by user
+  "isAdmin": Boolean,           // Admin status (no cooldown)
   "createdAt": Date,
   "updatedAt": Date
 }
@@ -231,9 +244,9 @@ mutation PlacePixel($x: Int!, $y: Int!, $color: Int!) {
 ## Usage
 
 1. **Register/Login**: Create an account or log in with existing credentials
-2. **Select Color**: Choose from the 32-color palette
+2. **Select Color**: Choose from the 40-color palette (selection persists across sessions)
 3. **Place Pixel**: Click on the canvas to place a pixel
-4. **Wait for Cooldown**: Each user can place one pixel every 30 seconds
+4. **Wait for Cooldown**: Regular users can place one pixel every 10 seconds (admins have no cooldown)
 5. **Watch Live Updates**: See other users' pixels appear in real-time
 
 ## Development

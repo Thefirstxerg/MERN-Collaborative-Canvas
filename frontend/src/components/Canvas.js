@@ -24,7 +24,7 @@ const PLACE_PIXEL = gql`
   }
 `;
 
-// 5-bit color palette (32 colors)
+// 40-color palette (extended from 32)
 const COLOR_PALETTE = [
   '#FFFFFF', '#E4E4E4', '#888888', '#222222', // Grays
   '#FFA7D1', '#E50000', '#E59500', '#A06A42', // Reds/Oranges
@@ -35,14 +35,19 @@ const COLOR_PALETTE = [
   '#6D482F', '#9C6926', '#FFD635', '#FFF8B8', // Browns/Yellows
   '#00A368', '#00CC78', '#7EED56', '#00756F', // Greens/Teals
   '#009EAA', '#00CCC0', '#2450A4', '#3690EA', // Blues
-  '#51E9F4', '#493AC1', '#6A5CFF', '#94B3FF'  // Light blues/purples
+  '#51E9F4', '#493AC1', '#6A5CFF', '#94B3FF', // Light blues/purples
+  '#000000', '#404040', '#800000', '#FF8000', // Additional colors
+  '#FFFF00', '#80FF00', '#00FF80', '#00FFFF'  // Additional colors
 ];
 
 const Canvas = () => {
   const { token, user, updateUser } = useAuth();
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
-  const [selectedColor, setSelectedColor] = useState(0);
+  const [selectedColor, setSelectedColor] = useState(() => {
+    const saved = localStorage.getItem('selectedColor');
+    return saved !== null ? parseInt(saved, 10) : 0;
+  });
   const [pixelGrid, setPixelGrid] = useState([]);
   const [status, setStatus] = useState(null);
   const [cooldownRemaining, setCooldownRemaining] = useState(0);
@@ -105,7 +110,7 @@ const Canvas = () => {
 
   // Cooldown timer
   useEffect(() => {
-    if (user?.lastPixelPlacementTimestamp) {
+    if (user?.lastPixelPlacementTimestamp && !user?.isAdmin) {
       const updateCooldown = () => {
         const now = Date.now();
         const lastPlacement = new Date(user.lastPixelPlacementTimestamp).getTime();
@@ -121,8 +126,10 @@ const Canvas = () => {
       };
       
       updateCooldown();
+    } else if (user?.isAdmin) {
+      setCooldownRemaining(0); // Admins have no cooldown
     }
-  }, [user?.lastPixelPlacementTimestamp, pixelGrid]); // Update when a new pixel is placed
+  }, [user?.lastPixelPlacementTimestamp, user?.isAdmin, pixelGrid]); // Update when a new pixel is placed
 
   // Handle WebSocket messages
   useEffect(() => {
@@ -180,7 +187,7 @@ const Canvas = () => {
 
   const handleCanvasRightClick = async (e) => {
     e.preventDefault(); // Prevent default context menu
-    if (!canvasRef.current || cooldownRemaining > 0) return;
+    if (!canvasRef.current || (!user?.isAdmin && cooldownRemaining > 0)) return;
 
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
@@ -277,6 +284,11 @@ const Canvas = () => {
     setPan({ x: newPanX, y: newPanY });
   };
 
+  const handleColorSelect = (colorIndex) => {
+    setSelectedColor(colorIndex);
+    localStorage.setItem('selectedColor', colorIndex.toString());
+  };
+
   const resetView = () => {
     setZoom(1);
     setPan({ x: 0, y: 0 });
@@ -296,7 +308,7 @@ const Canvas = () => {
               key={index}
               className={`color-option ${selectedColor === index ? 'selected' : ''}`}
               style={{ backgroundColor: color }}
-              onClick={() => setSelectedColor(index)}
+              onClick={() => handleColorSelect(index)}
               title={`Color ${index}`}
             />
           ))}
@@ -307,7 +319,9 @@ const Canvas = () => {
           <p>• Right-click to place a pixel</p>
           <p>• Left-click and drag to pan the canvas</p>
           <p>• Scroll to zoom in/out</p>
+          <p>• 40 colors available</p>
           <p>• 10 second cooldown between pixels</p>
+          <p>• Color selection persists across sessions</p>
         </div>
         
         <div className="canvas-controls">
@@ -324,7 +338,9 @@ const Canvas = () => {
           </div>
           
           <div className={`cooldown-timer ${cooldownRemaining > 0 ? 'active' : 'ready'}`}>
-            {cooldownRemaining > 0 ? (
+            {user?.isAdmin ? (
+              <span>Admin: No cooldown! 🚀</span>
+            ) : cooldownRemaining > 0 ? (
               <span>Cooldown: {cooldownRemaining}s</span>
             ) : (
               <span>Ready to place pixel!</span>

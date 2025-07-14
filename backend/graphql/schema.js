@@ -14,6 +14,7 @@ const typeDefs = gql`
     username: String!
     lastPixelPlacementTimestamp: String
     pixelCount: Int!
+    isAdmin: Boolean!
   }
 
   # Leaderboard entry
