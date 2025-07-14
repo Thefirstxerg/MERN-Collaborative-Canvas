@@ -50,7 +50,8 @@ const resolvers = {
         }
 
         // Create new user
-        const user = new User({ username, password });
+        const isAdmin = process.env.ADMIN_USERNAME && username === process.env.ADMIN_USERNAME;
+        const user = new User({ username, password, isAdmin });
         await user.save();
 
         // Generate token
@@ -62,7 +63,8 @@ const resolvers = {
             id: user._id,
             username: user.username,
             lastPixelPlacementTimestamp: user.lastPixelPlacementTimestamp,
-            pixelCount: user.pixelCount
+            pixelCount: user.pixelCount,
+            isAdmin: user.isAdmin
           }
         };
       } catch (error) {
@@ -93,7 +95,8 @@ const resolvers = {
             id: user._id,
             username: user.username,
             lastPixelPlacementTimestamp: user.lastPixelPlacementTimestamp,
-            pixelCount: user.pixelCount
+            pixelCount: user.pixelCount,
+            isAdmin: user.isAdmin
           }
         };
       } catch (error) {
@@ -106,9 +109,9 @@ const resolvers = {
         // Require authentication
         const user = await requireAuth(context.req);
 
-        // Check cooldown
+        // Check cooldown (skip for admin users)
         const now = new Date();
-        if (user.lastPixelPlacementTimestamp) {
+        if (!user.isAdmin && user.lastPixelPlacementTimestamp) {
           const timeSinceLastPlacement = now - user.lastPixelPlacementTimestamp;
           const cooldownMs = 10 * 1000; // 10 seconds
 

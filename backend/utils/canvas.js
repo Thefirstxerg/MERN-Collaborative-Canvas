@@ -70,8 +70,8 @@ const updatePixel = async (x, y, color) => {
     }
     
     // Validate color
-    if (color < 0 || color > 31) {
-      throw new Error('Color must be between 0 and 31');
+    if (color < 0 || color > 39) {
+      throw new Error('Color must be between 0 and 39');
     }
     
     // Calculate chunk coordinates
