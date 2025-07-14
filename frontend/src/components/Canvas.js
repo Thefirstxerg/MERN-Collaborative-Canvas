@@ -24,7 +24,7 @@ const PLACE_PIXEL = gql`
   }
 `;
 
-// 40-color palette (extended from 32)
+// 64-color palette - original 40 colors + 24 new unique colors
 const COLOR_PALETTE = [
   '#FFFFFF', '#E4E4E4', '#888888', '#222222', // Grays
   '#FFA7D1', '#E50000', '#E59500', '#A06A42', // Reds/Oranges
@@ -36,6 +36,13 @@ const COLOR_PALETTE = [
   '#00A368', '#00CC78', '#7EED56', '#00756F', // Greens/Teals
   '#009EAA', '#00CCC0', '#2450A4', '#3690EA', // Blues
   '#51E9F4', '#493AC1', '#6A5CFF', '#94B3FF', // Light blues/purples
+  // Additional 24 unique colors to complete 64-color palette
+  '#FF69B4', '#FF1493', '#DC143C', '#B22222', // Deep pinks/reds
+  '#FF4500', '#FF8C00', '#FFA500', '#FFD700', // Oranges/golds
+  '#ADFF2F', '#32CD32', '#228B22', '#006400', // Lime/forest greens
+  '#40E0D0', '#00CED1', '#008B8B', '#2F4F4F', // Turquoise/dark slate
+  '#87CEEB', '#4169E1', '#0000CD', '#191970', // Sky blues/midnight
+  '#9370DB', '#8A2BE2', '#4B0082', '#000000'  // Violets/indigo/black
 ];
 
 const Canvas = () => {
@@ -317,7 +324,7 @@ const Canvas = () => {
           <p>• Right-click to place a pixel</p>
           <p>• Left-click and drag to pan the canvas</p>
           <p>• Scroll to zoom in/out</p>
-          <p>• 40 colors available</p>
+          <p>• 64 colors available</p>
           <p>• 10 second cooldown between pixels</p>
           <p>• Color selection persists across sessions</p>
         </div>

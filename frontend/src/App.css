@@ -202,6 +202,8 @@ main {
   border: 1px solid #555;
   border-radius: 8px;
   background: #3a3a3a;
+  max-height: 300px;
+  overflow-y: auto;
 }
 
 .color-palette h3 {
