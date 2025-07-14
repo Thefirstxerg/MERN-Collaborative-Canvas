@@ -3,6 +3,7 @@ import { ApolloClient, InMemoryCache, ApolloProvider, createHttpLink } from '@ap
 import { setContext } from '@apollo/client/link/context';
 import Canvas from './components/Canvas';
 import Auth from './components/Auth';
+import Leaderboard from './components/Leaderboard';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import './App.css';
 
@@ -47,7 +48,14 @@ function AppContent() {
         </div>
       </header>
       <main>
-        {user ? <Canvas /> : <Auth />}
+        {user ? (
+          <>
+            <Canvas />
+            <Leaderboard />
+          </>
+        ) : (
+          <Auth />
+        )}
       </main>
     </div>
   );

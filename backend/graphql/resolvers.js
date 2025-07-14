@@ -19,6 +19,24 @@ const resolvers = {
       } catch (error) {
         return null;
       }
+    },
+    
+    getLeaderboard: async () => {
+      try {
+        const users = await User.find({})
+          .sort({ pixelCount: -1 })
+          .limit(10)
+          .select('username pixelCount');
+          
+        return users.map(user => ({
+          id: user._id,
+          username: user.username,
+          pixelCount: user.pixelCount,
+          waitingTimeSeconds: user.pixelCount * 10 // 10 seconds per pixel
+        }));
+      } catch (error) {
+        throw new Error('Failed to fetch leaderboard');
+      }
     }
   },
 
@@ -43,7 +61,8 @@ const resolvers = {
           user: {
             id: user._id,
             username: user.username,
-            lastPixelPlacementTimestamp: user.lastPixelPlacementTimestamp
+            lastPixelPlacementTimestamp: user.lastPixelPlacementTimestamp,
+            pixelCount: user.pixelCount
           }
         };
       } catch (error) {
@@ -73,7 +92,8 @@ const resolvers = {
           user: {
             id: user._id,
             username: user.username,
-            lastPixelPlacementTimestamp: user.lastPixelPlacementTimestamp
+            lastPixelPlacementTimestamp: user.lastPixelPlacementTimestamp,
+            pixelCount: user.pixelCount
           }
         };
       } catch (error) {
@@ -101,9 +121,10 @@ const resolvers = {
         // Update pixel in canvas
         const pixel = await updatePixel(x, y, color);
 
-        // Update user's last placement timestamp
+        // Update user's last placement timestamp and increment pixel count
         await User.findByIdAndUpdate(user._id, {
-          lastPixelPlacementTimestamp: now
+          lastPixelPlacementTimestamp: now,
+          $inc: { pixelCount: 1 }
         });
 
         // Broadcast the pixel update via WebSocket
