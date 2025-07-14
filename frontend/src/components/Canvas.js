@@ -36,8 +36,6 @@ const COLOR_PALETTE = [
   '#00A368', '#00CC78', '#7EED56', '#00756F', // Greens/Teals
   '#009EAA', '#00CCC0', '#2450A4', '#3690EA', // Blues
   '#51E9F4', '#493AC1', '#6A5CFF', '#94B3FF', // Light blues/purples
-  '#000000', '#404040', '#800000', '#FF8000', // Additional colors
-  '#FFFF00', '#80FF00', '#00FF80', '#00FFFF'  // Additional colors
 ];
 
 const Canvas = () => {
