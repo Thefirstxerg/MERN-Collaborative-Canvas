@@ -43,7 +43,7 @@ const Leaderboard = () => {
             <div className="username">{entry.username}</div>
             <div className="stats">
               <div className="pixel-count">{entry.pixelCount} pixels</div>
-              <div className="waiting-time">{formatTime(entry.waitingTimeSeconds)} waited</div>
+              <div className="waiting-time">{formatTime(entry.waitingTimeSeconds)} wasted</div>
             </div>
           </div>
         ))}
