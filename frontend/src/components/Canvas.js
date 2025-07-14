@@ -80,11 +80,20 @@ const Canvas = () => {
         const availableHeight = rect.height - 20; // Account for padding
         
         // Make canvas take up most of the available space, but keep it square
+        // Use Math.min to ensure canvas fits within available space
         const canvasSize = Math.min(availableWidth, availableHeight);
         
-        setCanvasSize({
-          width: Math.max(canvasSize, 400), // Minimum size
-          height: Math.max(canvasSize, 400)
+        // Always update canvas size, ensuring minimum size
+        const newSize = Math.max(canvasSize, 400);
+        setCanvasSize(prevSize => {
+          // Only update if the size has actually changed to prevent unnecessary re-renders
+          if (prevSize.width !== newSize || prevSize.height !== newSize) {
+            return {
+              width: newSize,
+              height: newSize
+            };
+          }
+          return prevSize;
         });
       }
     };
@@ -169,7 +178,8 @@ const Canvas = () => {
     }
   }, [pixelGrid, zoom, pan, canvasSize]);
 
-  const handleCanvasClick = async (e) => {
+  const handleCanvasRightClick = async (e) => {
+    e.preventDefault(); // Prevent default context menu
     if (!canvasRef.current || cooldownRemaining > 0) return;
 
     const canvas = canvasRef.current;
@@ -294,8 +304,8 @@ const Canvas = () => {
         
         <div className="canvas-info">
           <h3>Instructions</h3>
-          <p>• Click to place a pixel</p>
-          <p>• Drag to pan the canvas</p>
+          <p>• Right-click to place a pixel</p>
+          <p>• Left-click and drag to pan the canvas</p>
           <p>• Scroll to zoom in/out</p>
           <p>• 10 second cooldown between pixels</p>
         </div>
@@ -333,7 +343,7 @@ const Canvas = () => {
           width={canvasSize.width}
           height={canvasSize.height}
           className="canvas-board"
-          onClick={handleCanvasClick}
+          onContextMenu={handleCanvasRightClick}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}

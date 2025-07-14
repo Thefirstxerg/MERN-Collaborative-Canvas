@@ -13,6 +13,15 @@ const typeDefs = gql`
     id: ID!
     username: String!
     lastPixelPlacementTimestamp: String
+    pixelCount: Int!
+  }
+
+  # Leaderboard entry
+  type LeaderboardEntry {
+    id: ID!
+    username: String!
+    pixelCount: Int!
+    waitingTimeSeconds: Int!
   }
 
   # The payload returned upon successful authentication
@@ -35,6 +44,9 @@ const typeDefs = gql`
     
     # Fetches the current authenticated user's profile
     me: User
+    
+    # Fetches the leaderboard (top 10 users by pixel count)
+    getLeaderboard: [LeaderboardEntry!]!
   }
 
   # Mutations for changing state

@@ -18,6 +18,10 @@ const userSchema = new mongoose.Schema({
   lastPixelPlacementTimestamp: {
     type: Date,
     default: null
+  },
+  pixelCount: {
+    type: Number,
+    default: 0
   }
 }, {
   timestamps: true
