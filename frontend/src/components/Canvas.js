@@ -76,16 +76,15 @@ const Canvas = () => {
         const rect = container.getBoundingClientRect();
         
         // Calculate available space (account for sidebar and padding)
-        const availableWidth = rect.width - 40; // Account for padding
-        const availableHeight = rect.height - 40; // Account for padding
+        const availableWidth = rect.width - 20; // Account for padding
+        const availableHeight = rect.height - 20; // Account for padding
         
-        // Make canvas take up most of the available space
-        const canvasWidth = Math.min(availableWidth, availableHeight);
-        const canvasHeight = canvasWidth; // Square canvas
+        // Make canvas take up most of the available space, but keep it square
+        const canvasSize = Math.min(availableWidth, availableHeight);
         
         setCanvasSize({
-          width: Math.max(canvasWidth, 400), // Minimum size
-          height: Math.max(canvasHeight, 400)
+          width: Math.max(canvasSize, 400), // Minimum size
+          height: Math.max(canvasSize, 400)
         });
       }
     };
@@ -173,12 +172,27 @@ const Canvas = () => {
   const handleCanvasClick = async (e) => {
     if (!canvasRef.current || cooldownRemaining > 0) return;
 
-    const rect = canvasRef.current.getBoundingClientRect();
-    const pixelSize = Math.min(canvasSize.width / 150, canvasSize.height / 150);
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    
+    // Get the actual canvas dimensions
+    const canvasWidth = canvas.width;
+    const canvasHeight = canvas.height;
+    
+    // Calculate the scaling factors
+    const scaleX = canvasWidth / rect.width;
+    const scaleY = canvasHeight / rect.height;
+    
+    // Calculate click position relative to canvas
+    const clickX = (e.clientX - rect.left) * scaleX;
+    const clickY = (e.clientY - rect.top) * scaleY;
+    
+    // Calculate pixel size based on actual canvas size
+    const pixelSize = Math.min(canvasWidth / 150, canvasHeight / 150);
     
     // Calculate click position considering zoom and pan
-    const mouseX = (e.clientX - rect.left - pan.x) / zoom;
-    const mouseY = (e.clientY - rect.top - pan.y) / zoom;
+    const mouseX = (clickX - pan.x) / zoom;
+    const mouseY = (clickY - pan.y) / zoom;
     
     const x = Math.floor(mouseX / pixelSize);
     const y = Math.floor(mouseY / pixelSize);
@@ -232,8 +246,25 @@ const Canvas = () => {
     e.preventDefault();
     e.stopPropagation();
     
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    
     const delta = e.deltaY > 0 ? 0.9 : 1.1;
-    setZoom(prev => Math.min(Math.max(prev * delta, 0.1), 5));
+    const newZoom = Math.min(Math.max(zoom * delta, 0.1), 5);
+    
+    // Calculate the zoom center point
+    const zoomFactor = newZoom / zoom;
+    
+    // Adjust pan to zoom towards mouse position
+    const newPanX = mouseX - (mouseX - pan.x) * zoomFactor;
+    const newPanY = mouseY - (mouseY - pan.y) * zoomFactor;
+    
+    setZoom(newZoom);
+    setPan({ x: newPanX, y: newPanY });
   };
 
   const resetView = () => {
