@@ -89,11 +89,10 @@ async function startServer() {
     });
   });
 
-  // Setup middleware
+  // Setup middleware - TEMPORARY: Allow all origins for testing
   app.use(cors({
-    origin: process.env.NODE_ENV === 'production' 
-      ? ['https://mern-collaborative-canvas.netlify.app', 'https://your-frontend-domain.netlify.app']
-      : ['http://localhost:3000', 'http://localhost:3001']
+    origin: true,
+    credentials: true
   }));
   app.use(express.json());
 
