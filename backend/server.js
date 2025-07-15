@@ -13,7 +13,7 @@ const resolvers = require('./graphql/resolvers');
 const { initializeCanvas } = require('./utils/canvas');
 
 const PORT = process.env.PORT || 4000;
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/rdraw';
+const MONGODB_URI = process.env.MONGODB_URI;
 
 async function startServer() {
   // Create Express app
@@ -114,15 +114,15 @@ async function startServer() {
 
   // Start the server
   httpServer.listen(PORT, () => {
-    console.log(`🚀 Server ready at http://localhost:${PORT}`);
-    console.log(`🚀 GraphQL endpoint: http://localhost:${PORT}/graphql`);
-    console.log(`🚀 WebSocket endpoint: ws://localhost:${PORT}/ws`);
+    console.log(`Server ready at http://localhost:${PORT}`);
+    console.log(`GraphQL endpoint: http://localhost:${PORT}/graphql`);
+    console.log(`WebSocket endpoint: ws://localhost:${PORT}/ws`);
   });
 }
 
 // Handle graceful shutdown
 process.on('SIGINT', async () => {
-  console.log('\nShutting down gracefully...');
+  console.log('\nShutting down...');
   await mongoose.connection.close();
   process.exit(0);
 });
