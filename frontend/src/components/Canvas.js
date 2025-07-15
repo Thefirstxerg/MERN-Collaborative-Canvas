@@ -115,7 +115,14 @@ const Canvas = () => {
 
   // Cooldown timer
   useEffect(() => {
+    console.log('Cooldown effect triggered:', { 
+      lastPixelPlacementTimestamp: user?.lastPixelPlacementTimestamp, 
+      isAdmin: user?.isAdmin,
+      userObject: user 
+    });
+    
     if (user?.lastPixelPlacementTimestamp && !user?.isAdmin) {
+      console.log('Setting up cooldown for regular user');
       const updateCooldown = () => {
         const now = Date.now();
         const lastPlacement = new Date(user.lastPixelPlacementTimestamp).getTime();
@@ -132,6 +139,7 @@ const Canvas = () => {
       
       updateCooldown();
     } else if (user?.isAdmin) {
+      console.log('Admin user detected, setting cooldown to 0');
       setCooldownRemaining(0); // Admins have no cooldown
     }
   }, [user?.lastPixelPlacementTimestamp, user?.isAdmin, pixelGrid]); // Update when a new pixel is placed
@@ -340,6 +348,11 @@ const Canvas = () => {
           
           <div className="websocket-status">
             <span>WebSocket: {isConnected ? '✅ Connected' : '❌ Disconnected'}</span>
+          </div>
+          
+          <div className="admin-status">
+            <span>Admin Status: {user?.isAdmin ? '✅ Admin' : '❌ Regular User'}</span>
+            {user?.isAdmin && <span> (Debug: isAdmin = {JSON.stringify(user.isAdmin)})</span>}
           </div>
           
           <div className={`cooldown-timer ${cooldownRemaining > 0 ? 'active' : 'ready'}`}>

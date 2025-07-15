@@ -10,6 +10,8 @@ const REGISTER_USER = gql`
         id
         username
         lastPixelPlacementTimestamp
+        pixelCount
+        isAdmin
       }
     }
   }
@@ -23,6 +25,8 @@ const LOGIN_USER = gql`
         id
         username
         lastPixelPlacementTimestamp
+        pixelCount
+        isAdmin
       }
     }
   }
@@ -38,7 +42,7 @@ const Auth = () => {
   const [registerUser, { loading: registerLoading }] = useMutation(REGISTER_USER);
   const [loginUser, { loading: loginLoading }] = useMutation(LOGIN_USER);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
